@@ -1,0 +1,201 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require('firebase-admin');
+const port = process.env.PORT || 3000;
+
+// firebase admin SDK
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString(
+  'utf-8'
+);
+const serviceAccount = JSON.parse(decoded);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+const app = express();
+// middleware
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://b12-m11-session.web.app',
+    ],
+    credentials: true,
+    optionSuccessStatus: 200,
+  })
+);
+app.use(express.json());
+
+// jwt middlewares
+const verifyJWT = async (req, res, next) => {
+  const token = req?.headers?.authorization?.split(' ')[1];
+  console.log(token);
+  if (!token) return res.status(401).send({ message: 'Unauthorized Access!' });
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.tokenEmail = decoded.email;
+    console.log(decoded);
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.status(401).send({ message: 'Unauthorized Access!', err });
+  }
+};
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(process.env.MONGODB_URI, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
+async function run() {
+  try {
+    const db = client.db('lessonsDB');
+    const lessonsCollection = db.collection('lessons');
+    const usersCollection = db.collection('users');
+    const reportsCollection = db.collection('reports');
+    const commentsCollection = db.collection('comments');
+    const favoritesCollection = db.collection('favorites');
+
+    // Save a plant data in db
+    app.post('/lessons', async (req, res) => {
+      const lessonsData = req.body;
+      console.log(lessonsData);
+      const result = await lessonsCollection.insertOne(lessonsData);
+      res.send(result);
+    });
+
+    // get all lessons from db
+    app.get('/lessons', async (req, res) => {
+      const result = await lessonsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get single plants from db by id
+    app.get('/lessons/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    // ❌🔰 এখানে নতুন API যুক্ত করা হলো
+
+    // Like/Unlike Lesson
+    app.post('/lessons/:id/like', async (req, res) => {
+      const lessonId = req.params.id;
+      const { userId } = req.body;
+      const lesson = await lessonsCollection.findOne({
+        _id: new ObjectId(lessonId),
+      });
+      if (!lesson)
+        return res.status(404).send({ message: 'Lesson not found!' });
+
+      const likes = lesson.likes || [];
+      let likesCount = lesson.likesCount || 0;
+
+      if (likes.includes(userId)) {
+        // ❌🔰 remove like
+        await lessonsCollection.updateOne(
+          { _id: new ObjectId(lessonId) },
+          { $pull: { likes: userId }, $inc: { likesCount: -1 } }
+        );
+      } else {
+        // ❌🔰 add like
+        await lessonsCollection.updateOne(
+          { _id: new ObjectId(lessonId) },
+          { $addToSet: { likes: userId }, $inc: { likesCount: 1 } }
+        );
+      }
+
+      const updatedLesson = await lessonsCollection.findOne({
+        _id: new ObjectId(lessonId),
+      });
+      res.send(updatedLesson);
+    });
+
+    // Save/Remove Favorite
+    app.post('/lessons/:id/favorite', async (req, res) => {
+      const lessonId = req.params.id;
+      const { userId } = req.body;
+      const lesson = await lessonsCollection.findOne({
+        _id: new ObjectId(lessonId),
+      });
+      if (!lesson)
+        return res.status(404).send({ message: 'Lesson not found!' });
+
+      const favorites = lesson.favorites || [];
+      let favoritesCount = lesson.favoritesCount || 0;
+
+      if (favorites.includes(userId)) {
+        // ❌🔰 remove favorite
+        await lessonsCollection.updateOne(
+          { _id: new ObjectId(lessonId) },
+          { $pull: { favorites: userId }, $inc: { favoritesCount: -1 } }
+        );
+      } else {
+        // ❌🔰 add favorite
+        await lessonsCollection.updateOne(
+          { _id: new ObjectId(lessonId) },
+          { $addToSet: { favorites: userId }, $inc: { favoritesCount: 1 } }
+        );
+      }
+
+      const updatedLesson = await lessonsCollection.findOne({
+        _id: new ObjectId(lessonId),
+      });
+      res.send(updatedLesson);
+    });
+
+    // Report Lesson
+    app.post('/lessonsReports', async (req, res) => {
+      const reportData = req.body;
+      // ❌🔰 report save
+      const result = await reportsCollection.insertOne(reportData);
+      res.send({ message: 'Report submitted', result });
+    });
+
+    // Add Comment
+    app.post('/lessons/:id/comments', async (req, res) => {
+      const lessonId = req.params.id;
+      const { userId, userName, text } = req.body;
+      const comment = {
+        _id: new ObjectId(),
+        userId,
+        userName,
+        text,
+        createdAt: new Date(),
+      };
+
+      // ❌🔰 push comment to lesson
+      await lessonsCollection.updateOne(
+        { _id: new ObjectId(lessonId) },
+        { $push: { comments: comment } }
+      );
+
+      res.send({ message: 'Comment added', comment });
+    });
+
+    // Send a ping to confirm a successful connection
+    await client.db('admin').command({ ping: 1 });
+    console.log(
+      'Pinged your deployment. You successfully connected to MongoDB!'
+    );
+  } finally {
+    // Ensures that the client will close when you finish/error
+  }
+}
+run().catch(console.dir);
+
+app.get('/', (req, res) => {
+  res.send('Hello from Server..');
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
