@@ -1,6 +1,6 @@
 import React from 'react';
 
-const UserDashboardHome = () => {
+const UserOverview = () => {
   return (
     <div>
       <h2 className="text-4xl">User Dashboard Home</h2>
@@ -8,4 +8,4 @@ const UserDashboardHome = () => {
   );
 };
 
-export default UserDashboardHome;
+export default UserOverview;

@@ -99,8 +99,29 @@ async function run() {
     // Save a plant data in db
     app.post('/lessons', async (req, res) => {
       const lessonsData = req.body;
-      console.log(lessonsData);
+      lessonsData.createdAt = new Date();
       const result = await lessonsCollection.insertOne(lessonsData);
+      res.send(result);
+    });
+
+    // Most saved lessons
+    app.get('/lessons/most-saved', async (req, res) => {
+      const result = await lessonsCollection
+        .find()
+        .sort({ saves: -1 })
+        .limit(6)
+        .toArray();
+
+      res.send(result);
+    });
+
+    // Home page API
+    app.get('/lessons/featured', async (req, res) => {
+      const result = await lessonsCollection
+        .find({ isFeatured: { $eq: true } })
+        .sort({ createdAt: -1 })
+        .toArray();
+
       res.send(result);
     });
 
@@ -117,7 +138,7 @@ async function run() {
       res.send(result);
     });
 
-    // ❌🔰 এখানে নতুন API যুক্ত করা হলো
+    //  এখানে নতুন API যুক্ত করা হলো
 
     // Like/Unlike Lesson
     app.post('/lessons/:id/like', async (req, res) => {
@@ -133,13 +154,13 @@ async function run() {
       let likesCount = lesson.likesCount || 0;
 
       if (likes.includes(userId)) {
-        // ❌🔰 remove like
+        // remove like
         await lessonsCollection.updateOne(
           { _id: new ObjectId(lessonId) },
           { $pull: { likes: userId }, $inc: { likesCount: -1 } }
         );
       } else {
-        // ❌🔰 add like
+        //  add like
         await lessonsCollection.updateOne(
           { _id: new ObjectId(lessonId) },
           { $addToSet: { likes: userId }, $inc: { likesCount: 1 } }
@@ -166,13 +187,13 @@ async function run() {
       let favoritesCount = lesson.favoritesCount || 0;
 
       if (favorites.includes(userId)) {
-        // ❌🔰 remove favorite
+        //  remove favorite
         await lessonsCollection.updateOne(
           { _id: new ObjectId(lessonId) },
           { $pull: { favorites: userId }, $inc: { favoritesCount: -1 } }
         );
       } else {
-        // ❌🔰 add favorite
+        //  add favorite
         await lessonsCollection.updateOne(
           { _id: new ObjectId(lessonId) },
           { $addToSet: { favorites: userId }, $inc: { favoritesCount: 1 } }
@@ -188,7 +209,7 @@ async function run() {
     // Report Lesson
     app.post('/lessonsReports', async (req, res) => {
       const reportData = req.body;
-      // ❌🔰 report save
+      //  report save
       const result = await reportsCollection.insertOne(reportData);
       res.send({ message: 'Report submitted', result });
     });
@@ -205,7 +226,7 @@ async function run() {
         createdAt: new Date(),
       };
 
-      // ❌🔰 push comment to lesson
+      //  push comment to lesson
       await lessonsCollection.updateOne(
         { _id: new ObjectId(lessonId) },
         { $push: { comments: comment } }
@@ -214,7 +235,7 @@ async function run() {
       res.send({ message: 'Comment added', comment });
     });
 
-    // ❌🔰 Add view tracking API
+    //  Add view tracking API
     app.post('/lessons/:id/view', async (req, res) => {
       const id = req.params.id;
       const lesson = await lessonsCollection.findOne({ _id: new ObjectId(id) });
@@ -227,6 +248,46 @@ async function run() {
       );
 
       res.send({ message: 'View incremented' });
+    });
+
+    // Top contributors
+    app.get('/users/top-contributors', async (req, res) => {
+      const result = await lessonsCollection
+        .aggregate([
+          {
+            $group: {
+              _id: '$authorId',
+              totalLessons: { $sum: 1 },
+            },
+          },
+          { $sort: { totalLessons: -1 } },
+          { $limit: 5 },
+          {
+            $lookup: {
+              from: 'users',
+              localField: '_id',
+              foreignField: 'uid',
+              as: 'authorInfo',
+            },
+          },
+          { $unwind: '$authorInfo' },
+        ])
+        .toArray();
+
+      res.send(result);
+    });
+
+    // Mark as featured
+    app.patch('/lessons/:id/featured', async (req, res) => {
+      const id = req.params.id;
+      const { isFeatured } = req.body;
+
+      const result = await lessonsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isFeatured } }
+      );
+
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection

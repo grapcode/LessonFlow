@@ -1,68 +1,141 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// BannerHero.jsx
-// React + TailwindCSS + daisyUI
-// Default export a reusable Banner / Hero component for the Home Page.
+//  LessonFlow: Titles auto-change হবে
+const dynamicTitles = [
+  'Discover Life Lessons From Real People',
+  'Share Your Wisdom With the World',
+  'Learn From Mistakes, Experiences & Stories',
+  'Your Journey Can Inspire Someone Today',
+];
 
-const Banner = ({
-  title = 'Share & Find Free Food in Your Community',
-  subtitle = 'Reduce waste. Help neighbors. Collect food near you — fast and simple.',
-  imageUrl = 'https://images.unsplash.com/photo-1727003826885-4512f0a8388a?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1331',
-  onSearch = () => {},
-  onViewAll = () => {},
-}) => {
+//  LessonFlow: Subtitles auto-change
+const dynamicSubtitles = [
+  'Every lesson teaches something valuable.',
+  'Your story might save someone from a mistake.',
+  'Learn. Grow. Inspire.',
+  'Write your journey — someone needs it.',
+];
+
+//  Multiple Banner Images
+const images = [
+  'https://i.ibb.co.com/jpTcFY3/photo-1621606676970-fc3a0a39aa96.avif',
+  'https://i.ibb.co.com/Lz4BMrpD/photo-1758270703878-de80505b6714.avif',
+  'https://i.ibb.co.com/yc4Ksprt/photo-1585432959445-662c9bbcd91d.avif',
+];
+
+const Banner = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [textIndex, setTextIndex] = useState(0);
+
+  //  Auto-change image
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  //  Auto-change text (3s)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTextIndex((prev) => (prev + 1) % dynamicTitles.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <header className="relative w-full">
-      {/* Background image + dark overlay */}
-      <div
-        className="h-[60vh] md:h-[72vh] lg:h-[80vh] bg-cover bg-center"
-        style={{ backgroundImage: `url(${imageUrl})` }}
-        role="img"
-        aria-label="Community food sharing banner"
-      >
-        <div className="w-full h-full bg-gradient-to-r from-black/60 via-black/35 to-transparent flex items-center">
-          <div className="container mx-auto px-6 md:px-12 lg:px-20">
-            <div className="max-w-3xl text-white">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
-                {title}
-              </h1>
-              <p className="mt-4 text-sm sm:text-base md:text-lg text-gray-200">
-                {subtitle}
-              </p>
+    <header className="relative w-full overflow-hidden h-[60vh] md:h-[72vh] lg:h-[80vh] rounded-3xl my-5">
+      {/* Animated Background Image */}
+      <AnimatePresence>
+        <motion.div
+          key={currentIndex}
+          className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${images[currentIndex]})` }}
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.1 }}
+          transition={{ duration: 1.5 }}
+        />
+      </AnimatePresence>
 
-              {/* CTA Buttons */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button
-                  onClick={onSearch}
-                  className="btn btn-primary btn-lg shadow-lg"
-                  aria-label="Search Food"
-                >
-                  Search Food
-                </button>
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent flex items-center">
+        <div className="container mx-auto px-6 md:px-12 lg:px-20">
+          <motion.div
+            className="max-w-3xl text-white"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            {/* ❌ Animated Title */}
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={textIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.8 }}
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight"
+              >
+                {dynamicTitles[textIndex]}
+              </motion.h1>
+            </AnimatePresence>
 
-                <button
-                  onClick={onViewAll}
-                  className="btn btn-outline btn-lg text-white border-white/60 hover:border-white"
-                  aria-label="View All Foods"
-                >
-                  View All Foods
-                </button>
+            {/* ❌ Animated Subtitle */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={'sub-' + textIndex}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="mt-4 text-sm sm:text-base md:text-lg text-gray-200"
+              >
+                {dynamicSubtitles[textIndex]}
+              </motion.p>
+            </AnimatePresence>
+
+            {/* CTA Buttons */}
+            <motion.div
+              className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1 }}
+            >
+              <Link
+                to="/lessons"
+                className="btn btn-primary btn-lg text-white hover:border-accent"
+              >
+                View Lessons
+              </Link>
+              <Link
+                to="/dashboard/add-lesson"
+                className="btn bg-white text-black btn-lg hover:bg-gray-200"
+              >
+                Share Your Lesson
+              </Link>
+            </motion.div>
+
+            {/* Trust Badges */}
+            <motion.div
+              className="mt-6 flex items-center gap-4 text-sm text-gray-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 1.3 }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="badge badge-accent">Real Stories</span>
+                <span className="opacity-80">•</span>
+                <span>Community Inspired</span>
               </div>
-
-              {/* Small helper / trust badges */}
-              <div className="mt-6 flex items-center gap-4 text-sm text-gray-200">
-                <div className="flex items-center gap-2">
-                  <span className="badge badge-accent">Verified Donors</span>
-                  <span className="opacity-80">•</span>
-                  <span>Community driven</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Decorative wave / divider */}
+      {/* White Wave Divider */}
       <div className="-mt-1">
         <svg
           viewBox="0 0 1440 64"

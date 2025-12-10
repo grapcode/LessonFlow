@@ -12,7 +12,7 @@ import {
   MdOutlinePlayLesson,
   MdOutlineSpaceDashboard,
 } from 'react-icons/md';
-import { IoHomeOutline } from 'react-icons/io5';
+import { GrOverview } from 'react-icons/gr';
 import Navbar from '../components/Shared/Navbar';
 
 const DashboardLayout = () => {
@@ -65,11 +65,12 @@ const DashboardLayout = () => {
                   <Link
                     to="/dashboard"
                     className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                    data-tip="Homepage"
+                    data-tip="overview page"
                   >
-                    {/* Home icon */}
-                    <IoHomeOutline className="my-1.5 inline-block size-4" />
-                    <span className="is-drawer-close:hidden">Homepage</span>
+                    {/* Home / Overview icon */}
+                    <GrOverview className="my-1.5 inline-block size-4" />
+
+                    <span className="is-drawer-close:hidden">Overview</span>
                   </Link>
                 </li>
 

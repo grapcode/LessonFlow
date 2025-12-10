@@ -13,7 +13,7 @@ const Navbar = () => {
   // 🔰 get user from authProvider
 
   const { user, setUser, loading, logOut } = useAuth();
-  console.log(user);
+  // console.log(user);
 
   // ⚡ handle sign out btn
   const handleSignout = () => {
@@ -74,8 +74,11 @@ const Navbar = () => {
             </div>
             {/* logo */}
             <div className="flex gap-3 justify-center items-center ">
-              <img className="w-11 md:ml-0 ml-3" src={LFlogo} alt="" />
-              <Link to="/" className="text-2xl font-bold ">
+              <Link
+                to="/"
+                className="text-2xl font-bold flex justify-center items-center space-x-2"
+              >
+                <img className="w-11 md:ml-0 ml-3" src={LFlogo} alt="" />
                 Lesson<span className="text-primary">Flow</span>
               </Link>
             </div>

@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
 import React from 'react';
-import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import { useQuery } from '@tanstack/react-query';
 import { Legend, Pie, PieChart, Tooltip } from 'recharts';
+import useAxiosSecure from '../../../hooks/useAxiosSecure';
 
-const AdminDashboardHome = () => {
+const AdminOverview = () => {
   const axiosSecure = useAxiosSecure(); // url →  https://zap-shift-server-nine-blush.vercel.app
 
   const { data: deliveryStats = [] } = useQuery({
@@ -78,4 +78,4 @@ const AdminDashboardHome = () => {
   );
 };
 
-export default AdminDashboardHome;
+export default AdminOverview;
