@@ -41,7 +41,10 @@ const LessonCard = ({ lesson }) => {
         {/* Creator Info */}
         <div className="flex items-center gap-3 mt-2">
           <img
-            src={creator?.photoURL}
+            src={
+              creator?.photoURL ||
+              'https://img.icons8.com/?size=80&id=108652&format=png'
+            }
             alt="creator"
             className="w-10 h-10 rounded-full border"
           />

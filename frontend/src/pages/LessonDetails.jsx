@@ -118,7 +118,10 @@ const LessonDetails = () => {
       {/* Creator Info */}
       <div className="flex items-center gap-4">
         <img
-          src={lesson.creator?.photoURL}
+          src={
+            lesson.creator?.photoURL ||
+            'https://img.icons8.com/?size=80&id=108652&format=png'
+          }
           alt={lesson.creator?.name}
           className="w-12 h-12 rounded-full"
         />
@@ -132,7 +135,7 @@ const LessonDetails = () => {
       <div className="flex items-center gap-6 text-gray-600">
         <div>❤️ {lesson.likesCount || 0} Likes</div>
         <div>🔖 {lesson.favoritesCount || 0} Favorites</div>
-        <div>👀 {Math.floor(Math.random() * 10000)} Views</div>
+        <div>👀 {lesson.viewsCount || 0} Favorites</div>
       </div>
 
       {/* Interaction Buttons */}

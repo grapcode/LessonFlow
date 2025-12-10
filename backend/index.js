@@ -63,6 +63,39 @@ async function run() {
     const commentsCollection = db.collection('comments');
     const favoritesCollection = db.collection('favorites');
 
+    // save or update a user in db
+    app.post('/user', async (req, res) => {
+      const userData = req.body;
+
+      userData.created_at = new Date().toISOString();
+      userData.last_loggedIn = new Date().toISOString();
+      userData.role = 'user';
+
+      const query = { email: userData.email };
+
+      const alreadyExists = await usersCollection.findOne(query);
+      console.log('user already Exists --->', !!alreadyExists);
+
+      if (alreadyExists) {
+        console.log('updating user info..........');
+        const result = await usersCollection.updateOne(query, {
+          $set: {
+            last_loggedIn: new Date().toISOString(),
+          },
+        });
+        return res.send(result);
+      }
+      console.log('Saving new user info..........');
+      const result = await usersCollection.insertOne(userData);
+      res.send(result);
+    });
+
+    // get a user's role
+    app.get('/user/role', verifyJWT, async (req, res) => {
+      const result = await usersCollection.findOne({ email: req.tokenEmail });
+      res.send({ role: result?.role });
+    });
+
     // Save a plant data in db
     app.post('/lessons', async (req, res) => {
       const lessonsData = req.body;
@@ -179,6 +212,21 @@ async function run() {
       );
 
       res.send({ message: 'Comment added', comment });
+    });
+
+    // ❌🔰 Add view tracking API
+    app.post('/lessons/:id/view', async (req, res) => {
+      const id = req.params.id;
+      const lesson = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+      if (!lesson) return res.status(404).send({ message: 'Lesson not found' });
+
+      // Increment viewsCount
+      const updated = await lessonsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $inc: { viewsCount: 1 } }
+      );
+
+      res.send({ message: 'View incremented' });
     });
 
     // Send a ping to confirm a successful connection
