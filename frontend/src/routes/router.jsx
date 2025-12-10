@@ -10,6 +10,7 @@ import DashboardHome from '../pages/Dashboard/DashboardHome/DashboardHome';
 import MyLessons from '../pages/Dashboard/MyLessons';
 import AddLesson from '../pages/Dashboard/AddLesson';
 import LessonDetails from '../pages/LessonDetails';
+import Profile from '../pages/private_page/Profile';
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: '/lessons/:id',
         element: <LessonDetails />,
+      },
+      {
+        path: '/profile',
+        element: <Profile />,
       },
       {
         path: '/login',

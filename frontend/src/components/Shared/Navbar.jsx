@@ -1,15 +1,13 @@
 import { Link, NavLink } from 'react-router';
-import LFlogo from '../assets/LF_logo.jpg';
-import MyContainer from './my-components/MyContainer';
+import LFlogo from '../../assets/LF_logo.jpg';
+import MyContainer from '../my-components/MyContainer';
 import { IoReorderThreeOutline } from 'react-icons/io5';
-import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FadeLoader } from 'react-spinners';
 import { GoHomeFill } from 'react-icons/go';
-import { CgExtensionAdd } from 'react-icons/cg';
-import { MdManageAccounts, MdOutlinePlayLesson } from 'react-icons/md';
-import { IoMdGitPullRequest } from 'react-icons/io';
-import useAuth from '../hooks/useAuth';
+import { MdOutlinePlayLesson, MdOutlineSpaceDashboard } from 'react-icons/md';
+import { IoMdGitPullRequest, IoMdSettings } from 'react-icons/io';
+import useAuth from '../../hooks/useAuth';
 
 const Navbar = () => {
   // 🔰 get user from authProvider
@@ -46,7 +44,9 @@ const Navbar = () => {
       {user && (
         <>
           <li>
-            <NavLink to="/dashboard">Dashboard</NavLink>
+            <NavLink to="/dashboard">
+              <MdOutlineSpaceDashboard /> Dashboard
+            </NavLink>
           </li>
         </>
       )}
@@ -114,18 +114,14 @@ const Navbar = () => {
                     <li className="text-xs">{user.email}</li>
                   </div>
                   <li className="mt-2">
-                    <NavLink to="/addFood">
-                      <CgExtensionAdd /> Add Food
+                    <NavLink to="/profile">
+                      <IoMdSettings /> Profile
                     </NavLink>
                   </li>
                   <li>
-                    <NavLink to="/manageFoods">
-                      <MdManageAccounts /> Manage My Foods
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink to="/myRequests">
-                      <IoMdGitPullRequest /> My Requests
+                    <NavLink to="/dashboard">
+                      {' '}
+                      <MdOutlineSpaceDashboard /> Dashboard
                     </NavLink>
                   </li>
 

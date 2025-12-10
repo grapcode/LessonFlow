@@ -1,5 +1,5 @@
 import React from 'react';
-import MyContainer from './my-components/MyContainer';
+import MyContainer from '../my-components/MyContainer';
 import { FaFacebook, FaInstagram, FaLinkedin, FaPhone } from 'react-icons/fa';
 import { MdOutlineEmail } from 'react-icons/md';
 import { FaXTwitter } from 'react-icons/fa6';

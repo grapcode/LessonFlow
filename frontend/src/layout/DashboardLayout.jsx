@@ -13,7 +13,7 @@ import {
   MdOutlineSpaceDashboard,
 } from 'react-icons/md';
 import { IoHomeOutline } from 'react-icons/io5';
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Shared/Navbar';
 
 const DashboardLayout = () => {
   // const { role } = useRole();
