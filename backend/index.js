@@ -118,7 +118,7 @@ async function run() {
     // Home page API
     app.get('/lessons/featured', async (req, res) => {
       const result = await lessonsCollection
-        .find({ isFeatured: { $eq: true } })
+        .find({ isFeatured: true })
         .sort({ createdAt: -1 })
         .toArray();
 
@@ -131,8 +131,14 @@ async function run() {
       res.send(result);
     });
 
-    // get single plants from db by id
+    // get single lessons from db by id
     app.get('/lessons/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    app.get('/pricing/:id', async (req, res) => {
       const id = req.params.id;
       const result = await lessonsCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
@@ -288,6 +294,30 @@ async function run() {
       );
 
       res.send(result);
+    });
+
+    // 🌳 Payment endpoints
+    app.post('/create-checkout-session', async (req, res) => {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'bdt',
+              product_data: { name: 'Premium Upgrade (Lifetime)' },
+              unit_amount: 1500 * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        customer_email: req.body.email,
+
+        success_url: 'http://localhost:5173/payment/success',
+        cancel_url: 'http://localhost:5173/payment/cancel',
+      });
+
+      res.send({ url: session.url });
     });
 
     // Send a ping to confirm a successful connection

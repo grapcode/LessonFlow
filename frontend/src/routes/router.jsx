@@ -11,6 +11,8 @@ import MyLessons from '../pages/Dashboard/MyLessons';
 import AddLesson from '../pages/Dashboard/AddLesson';
 import LessonDetails from '../pages/LessonDetails';
 import Profile from '../pages/private_page/Profile';
+import ManageLessons from '../pages/Dashboard/ManageLessons';
+import Pricing from '../pages/Pricing';
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +29,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/lessons/:id',
-        element: <LessonDetails />,
+        element: (
+          <PrivateRoute>
+            <LessonDetails />
+          </PrivateRoute>
+        ),
       },
       {
         path: '/profile',
@@ -44,6 +50,10 @@ export const router = createBrowserRouter([
       {
         path: '/signup',
         element: <SignUp />,
+      },
+      {
+        path: '/pricing/:id',
+        element: <Pricing />,
       },
       {
         path: '/*',
@@ -64,13 +74,18 @@ export const router = createBrowserRouter([
         index: true,
         element: <DashboardHome />,
       },
+
+      {
+        path: 'add-lesson',
+        element: <AddLesson />,
+      },
       {
         path: 'my-lessons',
         element: <MyLessons />,
       },
       {
-        path: 'add-lesson',
-        element: <AddLesson />,
+        path: 'manageLessons',
+        element: <ManageLessons />,
       },
     ],
   },

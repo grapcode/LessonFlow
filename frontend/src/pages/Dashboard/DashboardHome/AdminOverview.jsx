@@ -22,7 +22,8 @@ const AdminOverview = () => {
 
   return (
     <div>
-      <h2 className="text-4xl">Admin Dashboard Home</h2>
+      <h2 className="text-3xl font-bold p-3 ">Admin Dashboard Home</h2>
+
       <div className="stats shadow">
         {/* stat */}
         {deliveryStats.map((stat) => (

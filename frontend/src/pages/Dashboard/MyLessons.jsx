@@ -67,7 +67,9 @@ const MyLessons = () => {
 
   return (
     <div>
-      <h2>All of my lesson {parcels.length}</h2>
+      <h2 className="text-3xl font-bold p-3">
+        All of my lesson {parcels.length}
+      </h2>
       <div className="overflow-x-auto">
         <table className="table table-zebra">
           {/* head */}

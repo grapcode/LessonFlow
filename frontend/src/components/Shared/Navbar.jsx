@@ -50,6 +50,20 @@ const Navbar = () => {
           </li>
         </>
       )}
+
+      {user && user.role !== 'premium' && (
+        <li>
+          <NavLink to="/pricing" className="font-semibold">
+            Upgrade 🔥
+          </NavLink>
+        </li>
+      )}
+
+      {user && user.role === 'premium' && (
+        <span className="px-3 py-1 bg-yellow-400 rounded-full text-sm font-bold">
+          Premium ⭐
+        </span>
+      )}
     </>
   );
   return (

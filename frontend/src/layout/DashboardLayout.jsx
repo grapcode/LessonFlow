@@ -102,14 +102,14 @@ const DashboardLayout = () => {
                 <>
                   <li>
                     <NavLink
-                      to="/dashboard/assigned-deliveries"
+                      to="/dashboard/manageLessons"
                       className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                      data-tip="Assigned Deliveries"
+                      data-tip="Manage Lessons"
                     >
                       <FaTasks className="my-1.5 inline-block size-4" />
 
                       <span className="is-drawer-close:hidden">
-                        Assigned Deliveries
+                        Manage Lessons
                       </span>
                     </NavLink>
                   </li>

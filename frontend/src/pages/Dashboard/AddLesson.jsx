@@ -90,6 +90,7 @@ const AddLesson = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-120px)] flex flex-col justify-center items-center text-gray-800 rounded-xl bg-gray-50 p-6">
+      <h2 className="text-3xl font-bold p-3 ">Add Lesson</h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="w-full max-w-5xl bg-white p-6 rounded-lg shadow-md"
