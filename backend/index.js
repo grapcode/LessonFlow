@@ -5,6 +5,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require('firebase-admin');
 const port = process.env.PORT || 3000;
 
+// 🌳stripe code
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
 // firebase admin SDK
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString(
   'utf-8'
@@ -60,7 +64,7 @@ async function run() {
     const lessonsCollection = db.collection('lessons');
     const usersCollection = db.collection('users');
     const reportsCollection = db.collection('reports');
-    const commentsCollection = db.collection('comments');
+    const purchasesCollection = db.collection('purchases');
     const favoritesCollection = db.collection('favorites');
 
     // save or update a user in db
@@ -93,7 +97,7 @@ async function run() {
     // get a user's role
     app.get('/user/role', verifyJWT, async (req, res) => {
       const result = await usersCollection.findOne({ email: req.tokenEmail });
-      res.send({ role: result?.role });
+      res.send({ role: result?.role || 'customer' });
     });
 
     // Save a plant data in db
@@ -134,13 +138,24 @@ async function run() {
     // get single lessons from db by id
     app.get('/lessons/:id', async (req, res) => {
       const id = req.params.id;
-      const result = await lessonsCollection.findOne({ _id: new ObjectId(id) });
-      res.send(result);
+      const lesson = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+
+      if (!lesson) {
+        return res.status(404).send({ message: 'Lesson not found' });
+      }
+
+      // If lesson is premium → user must be premium
+      if (lesson.accessLevel === 'premium' && req.user.role !== 'premium') {
+        return res.status(403).send({
+          message: 'Access denied. Upgrade to premium.',
+        });
+      }
+
+      res.send(lesson);
     });
 
-    app.get('/pricing/:id', async (req, res) => {
-      const id = req.params.id;
-      const result = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+    app.get('/pricing', async (req, res) => {
+      const result = await lessonsCollection.find().toArray();
       res.send(result);
     });
 
@@ -298,26 +313,55 @@ async function run() {
 
     // 🌳 Payment endpoints
     app.post('/create-checkout-session', async (req, res) => {
-      const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'bdt',
-              product_data: { name: 'Premium Upgrade (Lifetime)' },
-              unit_amount: 1500 * 100,
+      const { price, userEmail } = req.body;
+
+      try {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                unit_amount: price * 100,
+                product_data: {
+                  name: 'LessonFlow Premium Access',
+                },
+              },
+              quantity: 1,
             },
-            quantity: 1,
-          },
-        ],
-        customer_email: req.body.email,
+          ],
+          customer_email: userEmail,
+          success_url: `http://localhost:5173/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `http://localhost:5173/pricing`,
+        });
 
-        success_url: 'http://localhost:5173/payment/success',
-        cancel_url: 'http://localhost:5173/payment/cancel',
-      });
+        res.send({ url: session.url });
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ error: 'Stripe Session Failed' });
+      }
+    });
 
-      res.send({ url: session.url });
+    // 🌳 Payment -- success page api
+    app.post('/payment-success', async (req, res) => {
+      const { sessionId } = req.body;
+
+      try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        const email = session.customer_details.email;
+
+        await usersCollection.updateOne(
+          { email },
+          { $set: { role: 'premium' } }
+        );
+
+        res.send({ success: true, message: 'Premium Activated Successfully' });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ error: 'Payment verification failed' });
+      }
     });
 
     // Send a ping to confirm a successful connection

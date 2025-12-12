@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuth from '../hooks/useAuth';
 import useAxiosSecure from '../hooks/useAxiosSecure';
+import useRole from '../hooks/useRole';
 import toast from 'react-hot-toast';
 import { TbHeart, TbBookmark, TbFlag } from 'react-icons/tb';
 import { FaShareAlt } from 'react-icons/fa';
 import LoadingSpinner from '../components/my-components/LoadingSpinner';
-import LessonCard from '../components/LessonCard'; // Similar Lessons
+import LessonCard from '../components/LessonCard';
 
 const LessonDetails = () => {
   const { id } = useParams();
@@ -15,33 +16,50 @@ const LessonDetails = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
+  const { role, loading: roleLoading } = useRole();
+
   const [reporting, setReporting] = useState(false);
   const [commentText, setCommentText] = useState('');
 
   // Fetch lesson
-  const { data: lesson, isLoading } = useQuery({
+  const {
+    data: lesson,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['lesson', id],
     queryFn: async () => {
-      const { data } = await axiosSecure.get(`/lessons/${id}`);
-      return data;
+      try {
+        const { data } = await axiosSecure.get(`/lessons/${id}`);
+        return data;
+      } catch (err) {
+        console.log(err);
+        return null;
+      }
     },
   });
 
-  // Like
+  // Redirect if lesson not found
+  useEffect(() => {
+    if (!isLoading && !roleLoading && (!lesson || isError)) {
+      toast.error('Lesson not found or access denied');
+      navigate('/pricing');
+    }
+  }, [lesson, isLoading, roleLoading, isError, navigate]);
+
+  // --- Mutations ---
   const likeMutation = useMutation({
     mutationFn: async () =>
       axiosSecure.post(`/lessons/${id}/like`, { userId: user?.uid }),
     onSuccess: () => queryClient.invalidateQueries(['lesson', id]),
   });
 
-  // Favorite
   const favoriteMutation = useMutation({
     mutationFn: async () =>
       axiosSecure.post(`/lessons/${id}/favorite`, { userId: user?.uid }),
     onSuccess: () => queryClient.invalidateQueries(['lesson', id]),
   });
 
-  // Report
   const reportMutation = useMutation({
     mutationFn: async (reason) =>
       axiosSecure.post('/lessonsReports', {
@@ -57,7 +75,6 @@ const LessonDetails = () => {
     },
   });
 
-  // Add Comment
   const commentMutation = useMutation({
     mutationFn: async (text) =>
       axiosSecure.post(`/lessons/${id}/comments`, {
@@ -72,15 +89,21 @@ const LessonDetails = () => {
     },
   });
 
-  if (isLoading) return <LoadingSpinner />;
-  if (!lesson) return <p className="text-center mt-10">Lesson not found!</p>;
+  // --- Loading ---
+  if (isLoading || roleLoading) return <LoadingSpinner />;
+  if (!lesson) return null; // redirect already handled in useEffect
 
-  // Premium check
-  if (lesson.accessLevel === 'Premium' && !user?.isPremium) {
+  // ⭐ Premium Lock System
+  if (
+    lesson.accessLevel.toLowerCase() === 'premium' &&
+    role.toLowerCase() !== 'premium'
+  ) {
     return (
       <div className="p-10 text-center">
         <h2 className="text-2xl font-bold mb-4">This is a Premium Lesson ⭐</h2>
-        <p className="mb-6">Upgrade to Premium to view full content.</p>
+        <p className="mb-6 text-gray-600">
+          Upgrade to Premium to unlock this content.
+        </p>
         <button
           className="btn btn-primary"
           onClick={() => navigate('/pricing')}
@@ -93,7 +116,7 @@ const LessonDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Lesson Info */}
+      {/* Lesson Heading */}
       <div className="space-y-3">
         <h1 className="text-3xl font-bold">{lesson.title}</h1>
         <p className="text-gray-600">
@@ -131,11 +154,11 @@ const LessonDetails = () => {
         </div>
       </div>
 
-      {/* Stats & Engagement */}
+      {/* Stats */}
       <div className="flex items-center gap-6 text-gray-600">
         <div>❤️ {lesson.likesCount || 0} Likes</div>
         <div>🔖 {lesson.favoritesCount || 0} Favorites</div>
-        <div>👀 {lesson.viewsCount || 0} Favorites</div>
+        <div>👀 {lesson.viewsCount || 0} Views</div>
       </div>
 
       {/* Interaction Buttons */}
@@ -196,7 +219,7 @@ const LessonDetails = () => {
                 Misleading Information
               </option>
               <option value="Spam">Spam</option>
-              <option value="Sensitive">Sensitive or Disturbing Content</option>
+              <option value="Sensitive">Sensitive Content</option>
               <option value="Other">Other</option>
             </select>
             <button
@@ -209,7 +232,7 @@ const LessonDetails = () => {
         </div>
       )}
 
-      {/* Comments Section */}
+      {/* Comments */}
       <div className="space-y-3">
         <h3 className="text-xl font-semibold mb-2">Comments</h3>
         {lesson.comments?.map((c) => (

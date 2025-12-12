@@ -1,38 +1,42 @@
 import { useState } from 'react';
-import LoadingSpinner from '../components/my-components/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import { useParams } from 'react-router';
-import PurchaseModal from './Modal/PurchaseModal';
+import PurchaseModal from '../Modal/PurchaseModal';
+import useAxiosSecure from '../../hooks/useAxiosSecure';
+import useAuth from '../../hooks/useAuth';
 
 const Pricing = () => {
-  let [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const axiosSecure = useAxiosSecure();
+  const { user } = useAuth();
 
-  const { id } = useParams();
-
-  const {
-    data: pricing = {},
-    isLoading,
-    // refetch,
-  } = useQuery({
-    queryKey: ['pricing', id],
+  // -------- Fetch lessons using useQuery --------
+  const { data: lessonData = [], isLoading } = useQuery({
+    queryKey: ['premium-lessons'],
     queryFn: async () => {
-      const result = await axios(
-        `${import.meta.env.VITE_API_URL}/pricing/${id}`
-      );
-      return result.data;
+      const { data } = await axiosSecure.get('/lessons');
+      return data;
     },
   });
-  console.log(pricing);
-
-  const { _id, name, image, price, category, description, quantity, seller } =
-    pricing;
 
   const closeModal = () => {
     setIsOpen(false);
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  // -------- Stripe Checkout Handler --------
+  const handleCheckout = async () => {
+    try {
+      const res = await axiosSecure.post('/create-checkout-session', {
+        price: 1500, // ৳1500 দাম
+        userEmail: user?.email,
+      });
+
+      window.location.replace(res.data.url);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  if (isLoading) return <p className="text-center mt-20">Loading...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -67,24 +71,33 @@ const Pricing = () => {
           </ul>
 
           <p className="text-3xl font-bold mt-6">
-            $<span>500</span> (One-time)
+            ৳<span>1500</span> (One-time)
           </p>
 
+          {/* Stripe checkout button */}
           <button
-            onClick={() => setIsOpen(true)}
-            className="cursor-pointer  mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-lg"
+            onClick={() => {
+              setIsOpen(true);
+              handleCheckout();
+            }}
+            className="cursor-pointer mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-lg"
           >
             Upgrade to Premium ⭐
           </button>
 
-          <PurchaseModal
-            pricing={pricing}
-            closeModal={closeModal}
-            isOpen={isOpen}
-          />
+          {/* Modal Rendering */}
+          {lessonData.map((lesson) => (
+            <PurchaseModal
+              key={lesson._id}
+              lesson={lesson}
+              closeModal={closeModal}
+              isOpen={isOpen}
+            />
+          ))}
         </div>
       </div>
     </div>
   );
 };
+
 export default Pricing;

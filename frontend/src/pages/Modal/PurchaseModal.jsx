@@ -2,24 +2,23 @@ import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import useAuth from '../../hooks/useAuth';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
 
-const PurchaseModal = ({ closeModal, isOpen, lessons }) => {
+const PurchaseModal = ({ closeModal, isOpen, lesson }) => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
   // console.log(plant);
   // Total Price Calculation
-  const { _id, name, category, price, quantity, description, image, seller } =
-    lessons || {};
+  const { _id, title, category, description, accessLevel } = lesson || {};
+  // console.log(lesson);
 
   const handlePayment = async () => {
     const paymentInfo = {
-      plantId: _id,
+      lesson: _id,
       name,
       category,
-      price,
+      price: 500,
       description,
       quantity: 1,
-      image,
-      seller,
+      accessLevel,
       customer: {
         name: user?.displayName,
         email: user?.email,
@@ -56,7 +55,7 @@ const PurchaseModal = ({ closeModal, isOpen, lessons }) => {
               Review Info Before Purchase
             </DialogTitle>
             <div className="mt-2">
-              <p className="text-sm text-gray-500">Plant: {name}</p>
+              <p className="text-sm text-gray-500">Title: {title}</p>
             </div>
             <div className="mt-2">
               <p className="text-sm text-gray-500">Category: {category}</p>
@@ -68,12 +67,12 @@ const PurchaseModal = ({ closeModal, isOpen, lessons }) => {
             </div>
 
             <div className="mt-2">
-              <p className="text-sm text-gray-500">Price: ${price}</p>
+              <p className="text-sm text-gray-500">
+                Price: ৳<span>1500</span>
+              </p>
             </div>
             <div className="mt-2">
-              <p className="text-sm text-gray-500">
-                Available Quantity: {quantity}
-              </p>
+              <p className="text-sm text-gray-500">Lifetime access</p>
             </div>
             <div className="flex mt-2 justify-around">
               <button

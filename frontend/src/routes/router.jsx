@@ -12,7 +12,8 @@ import AddLesson from '../pages/Dashboard/AddLesson';
 import LessonDetails from '../pages/LessonDetails';
 import Profile from '../pages/private_page/Profile';
 import ManageLessons from '../pages/Dashboard/ManageLessons';
-import Pricing from '../pages/Pricing';
+import Pricing from '../pages/Payment/Pricing';
+import PaymentSuccess from '../pages/Payment/PaymentSuccess';
 
 export const router = createBrowserRouter([
   {
@@ -52,9 +53,15 @@ export const router = createBrowserRouter([
         element: <SignUp />,
       },
       {
-        path: '/pricing/:id',
+        path: '/pricing',
         element: <Pricing />,
+        loader: () => fetch('http://localhost:3000/pricing'),
       },
+      {
+        path: '/payment-success',
+        element: <PaymentSuccess />,
+      },
+
       {
         path: '/*',
         element: <h2>Error 404</h2>,

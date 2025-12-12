@@ -5,7 +5,11 @@ import { IoReorderThreeOutline } from 'react-icons/io5';
 import { toast } from 'react-toastify';
 import { FadeLoader } from 'react-spinners';
 import { GoHomeFill } from 'react-icons/go';
-import { MdOutlinePlayLesson, MdOutlineSpaceDashboard } from 'react-icons/md';
+import {
+  MdOutlinePlayLesson,
+  MdOutlineSpaceDashboard,
+  MdOutlineWorkspacePremium,
+} from 'react-icons/md';
 import { IoMdGitPullRequest, IoMdSettings } from 'react-icons/io';
 import useAuth from '../../hooks/useAuth';
 
@@ -54,7 +58,7 @@ const Navbar = () => {
       {user && user.role !== 'premium' && (
         <li>
           <NavLink to="/pricing" className="font-semibold">
-            Upgrade 🔥
+            <MdOutlineWorkspacePremium /> Premium Plan
           </NavLink>
         </li>
       )}
