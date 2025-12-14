@@ -2,18 +2,19 @@ import React from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { FaUsers } from 'react-icons/fa6';
 import { FaMotorcycle, FaTasks } from 'react-icons/fa';
-// import useRole from '../hooks/useRole';
 import FLlogo from '../assets/LF_logo.jpg';
 import MyContainer from '../components/my-components/MyContainer';
 import { SiGoogletasks } from 'react-icons/si';
 import { RiEBikeFill } from 'react-icons/ri';
 import {
+  MdFavorite,
   MdOutlineAddToPhotos,
   MdOutlinePlayLesson,
   MdOutlineSpaceDashboard,
 } from 'react-icons/md';
 import { GrOverview } from 'react-icons/gr';
 import Navbar from '../components/Shared/Navbar';
+import { MdManageAccounts } from 'react-icons/md';
 
 const DashboardLayout = () => {
   // const { role } = useRole();
@@ -98,6 +99,17 @@ const DashboardLayout = () => {
                     <span className="is-drawer-close:hidden">My Lessons</span>
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink
+                    to="/dashboard/my-favorites"
+                    className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                    data-tip="My Favorites"
+                  >
+                    <MdFavorite className="my-1.5 inline-block size-4" />
+
+                    <span className="is-drawer-close:hidden">My Favorites</span>
+                  </NavLink>
+                </li>
 
                 <>
                   <li>
@@ -115,14 +127,14 @@ const DashboardLayout = () => {
                   </li>
                   <li>
                     <NavLink
-                      to="/dashboard/completed-deliveries"
+                      to="/dashboard/manageUsers"
                       className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                      data-tip="Completed Deliveries"
+                      data-tip="Manage Users"
                     >
-                      <SiGoogletasks className="my-1.5 inline-block size-4" />
+                      <MdManageAccounts className="my-1.5 inline-block size-4" />
 
                       <span className="is-drawer-close:hidden">
-                        Completed Deliveries
+                        Manage Users
                       </span>
                     </NavLink>
                   </li>

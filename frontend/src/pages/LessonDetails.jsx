@@ -23,7 +23,7 @@ const LessonDetails = () => {
 
   // Fetch lesson
   const {
-    data: lesson,
+    data: lesson = [],
     isLoading,
     isError,
   } = useQuery({
@@ -38,14 +38,14 @@ const LessonDetails = () => {
       }
     },
   });
-
+  // console.log(lesson);
   // Redirect if lesson not found
   useEffect(() => {
-    if (!isLoading && !roleLoading && (!lesson || isError)) {
+    if (isError) {
       toast.error('Lesson not found or access denied');
       navigate('/pricing');
     }
-  }, [lesson, isLoading, roleLoading, isError, navigate]);
+  }, [isError, navigate]);
 
   // --- Mutations ---
   const likeMutation = useMutation({
@@ -91,28 +91,29 @@ const LessonDetails = () => {
 
   // --- Loading ---
   if (isLoading || roleLoading) return <LoadingSpinner />;
-  if (!lesson) return null; // redirect already handled in useEffect
 
   // ⭐ Premium Lock System
   if (
-    lesson.accessLevel.toLowerCase() === 'premium' &&
-    role.toLowerCase() !== 'premium'
+    lesson?.accessLevel?.toLowerCase() === 'premium' &&
+    !role.includes('premium')
   ) {
     return (
       <div className="p-10 text-center">
-        <h2 className="text-2xl font-bold mb-4">This is a Premium Lesson ⭐</h2>
+        <h2 className="text-2xl font-bold mb-4">Premium Lesson ⭐</h2>
         <p className="mb-6 text-gray-600">
-          Upgrade to Premium to unlock this content.
+          Upgrade to Premium to unlock this lesson.
         </p>
         <button
           className="btn btn-primary"
           onClick={() => navigate('/pricing')}
         >
-          Upgrade to Premium
+          Upgrade
         </button>
       </div>
     );
   }
+
+  console.log(role, lesson.accessLevel);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

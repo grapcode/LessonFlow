@@ -14,6 +14,10 @@ import Profile from '../pages/private_page/Profile';
 import ManageLessons from '../pages/Dashboard/ManageLessons';
 import Pricing from '../pages/Payment/Pricing';
 import PaymentSuccess from '../pages/Payment/PaymentSuccess';
+import UserOverview from '../pages/Dashboard/DashboardHome/UserOverview';
+import MyFavorites from '../pages/Dashboard/MyFavorites';
+import AdminOverview from '../pages/Dashboard/DashboardHome/AdminOverview';
+import ManageUsers from '../pages/Dashboard/ManageUsers';
 
 export const router = createBrowserRouter([
   {
@@ -89,6 +93,22 @@ export const router = createBrowserRouter([
       {
         path: 'my-lessons',
         element: <MyLessons />,
+      },
+      {
+        path: 'my-favorites',
+        element: <MyFavorites />,
+      },
+      {
+        path: 'user-summary',
+        element: <UserOverview />,
+      },
+      {
+        path: 'admin-summary',
+        element: <AdminOverview />,
+      },
+      {
+        path: 'manageUsers',
+        element: <ManageUsers />,
       },
       {
         path: 'manageLessons',

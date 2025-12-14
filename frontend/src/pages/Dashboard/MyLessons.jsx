@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiEdit } from 'react-icons/fi';
 import { FaMagnifyingGlass } from 'react-icons/fa6';
 import { FaTrashAlt } from 'react-icons/fa';
@@ -7,131 +6,90 @@ import Swal from 'sweetalert2';
 import { Link } from 'react-router';
 import useAuth from '../../hooks/useAuth';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
+import toast from 'react-hot-toast';
 
 const MyLessons = () => {
   const { user } = useAuth();
-
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
-  const { data: parcels = [], refetch } = useQuery({
-    queryKey: ['myParcels', user?.email],
+  const { data: lessons = [] } = useQuery({
+    queryKey: ['my-lessons', user?.email],
     queryFn: async () => {
-      const res = await axiosSecure.get(`/parcels?email=${user.email}`);
+      const res = await axiosSecure.get('/lessons/my-lessons');
       return res.data;
     },
   });
 
-  const handleParcelDelete = (id) => {
-    console.log(id);
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => axiosSecure.delete(`/lessons/${id}`),
+    onSuccess: () => {
+      toast.success('Lesson deleted successfully');
+      queryClient.invalidateQueries(['my-lessons', user?.email]);
+    },
+  });
 
+  const handleDelete = (lesson) => {
     Swal.fire({
       title: 'Are you sure?',
-      text: "You won't be able to revert this!",
+      text: 'This will permanently delete your lesson!',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
-      if (result.isConfirmed) {
-        axiosSecure.delete(`/parcels/${id}`).then((res) => {
-          console.log(res.data);
-          if (res.data.deletedCount) {
-            // refresh the data in the ui
-            refetch();
-            Swal.fire({
-              title: 'Deleted!',
-              text: 'Your parcel request has been deleted.',
-              icon: 'success',
-            });
-          }
-        });
-      }
+      if (result.isConfirmed) deleteMutation.mutate(lesson._id);
     });
   };
 
-  const handlePayment = async (parcel) => {
-    const parcelInfo = {
-      cost: parcel.cost,
-      parcelId: parcel._id,
-      senderEmail: parcel.senderEmail,
-      parcelName: parcel.parcelName,
-      trackingId: parcel.trackingId,
-    };
-
-    const res = await axiosSecure.post('/payment-checkout-session', parcelInfo);
-
-    // console.log(res.data.url);
-    window.location.href = res.data.url;
-  };
-
   return (
-    <div>
-      <h2 className="text-3xl font-bold p-3">
-        All of my lesson {parcels.length}
-      </h2>
+    <div className="p-5">
+      <h2 className="text-3xl font-bold mb-4">My Lessons ({lessons.length})</h2>
       <div className="overflow-x-auto">
-        <table className="table table-zebra">
-          {/* head */}
+        <table className="table table-zebra w-full">
           <thead>
             <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Cost</th>
-              <th>Payment</th>
-              <th>Tracking Id</th>
-              <th>Delivery Status</th>
+              <th>#</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Access</th>
+              <th>Created</th>
+              <th>Likes</th>
+              <th>Favorites</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {parcels.map((parcel, index) => (
-              <tr key={parcel._id}>
-                <th> {index + 1}</th>
-                <td>{parcel.parcelName}</td>
-                <td>{parcel.cost}</td>
+            {lessons.map((lesson, index) => (
+              <tr key={lesson._id}>
+                <th>{index + 1}</th>
+                <td>{lesson.title}</td>
+                <td>{lesson.category}</td>
                 <td>
-                  {parcel.paymentStatus === 'paid' ? (
-                    <span className="text-green-400">Paid</span>
-                  ) : (
-                    <button
-                      onClick={() => handlePayment(parcel)}
-                      className="btn btn-secondary text-black"
-                    >
-                      Pay
-                    </button>
-                  )}
+                  {lesson.accessLevel} |{' '}
+                  {lesson.isPublic ? 'Public' : 'Private'}
                 </td>
-                {/* old -- payment system--02 */}
-                {/* <td>
-                  {parcel.paymentStatus === 'paid' ? (
-                    <span className="text-green-400">Paid</span>
-                  ) : (
-                    <Link to={`/dashboard/payment/${parcel._id}`}>
-                      <button className="btn btn-secondary text-black">
-                        Pay
-                      </button>
-                    </Link>
-                  )}
-                </td> */}
-
-                <td className="text-red-500">
-                  <Link to={`/parcel-track/${parcel.trackingId}`}>
-                    {parcel.trackingId}
-                  </Link>
-                </td>
-                <td>{parcel.deliveryStatus}</td>
-                <td className="space-x-2">
-                  <button className="btn btn-square hover:bg-secondary">
+                <td>{new Date(lesson.createdAt).toLocaleDateString()}</td>
+                <td>{lesson.likesCount || 0}</td>
+                <td>{lesson.favoritesCount || 0}</td>
+                <td className="flex gap-2">
+                  <Link
+                    to={`/dashboard/lesson-details/${lesson._id}`}
+                    className="btn btn-active hover:bg-primary/50"
+                  >
                     <FaMagnifyingGlass />
-                  </button>
+                  </Link>
 
-                  <button className="btn btn-square hover:bg-secondary">
+                  <Link
+                    to={`/dashboard/lesson-edit/${lesson._id}`}
+                    className="btn btn-active hover:bg-primary/50"
+                  >
                     <FiEdit />
-                  </button>
+                  </Link>
+
                   <button
-                    onClick={() => handleParcelDelete(parcel._id)}
-                    className="btn btn-square hover:bg-secondary"
+                    onClick={() => handleDelete(lesson)}
+                    className="btn btn-active hover:bg-primary/50"
                   >
                     <FaTrashAlt />
                   </button>

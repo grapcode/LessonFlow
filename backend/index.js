@@ -40,7 +40,12 @@ const verifyJWT = async (req, res, next) => {
   if (!token) return res.status(401).send({ message: 'Unauthorized Access!' });
   try {
     const decoded = await admin.auth().verifyIdToken(token);
-    req.tokenEmail = decoded.email;
+    //✅ req.tokenEmail = decoded.email;
+    req.user = {
+      email: decoded.email,
+      uid: decoded.uid,
+    };
+
     console.log(decoded);
     next();
   } catch (err) {
@@ -64,8 +69,16 @@ async function run() {
     const lessonsCollection = db.collection('lessons');
     const usersCollection = db.collection('users');
     const reportsCollection = db.collection('reports');
-    const purchasesCollection = db.collection('purchases');
-    const favoritesCollection = db.collection('favorites');
+    // const purchasesCollection = db.collection('purchases');
+    // const favoritesCollection = db.collection('favorites');
+
+    const verifyAdmin = async (req, res, next) => {
+      const user = await usersCollection.findOne({ email: req.user.email });
+      if (!user || !user.role?.includes('admin')) {
+        return res.status(403).send({ message: 'Forbidden' });
+      }
+      next();
+    };
 
     // save or update a user in db
     app.post('/user', async (req, res) => {
@@ -73,7 +86,7 @@ async function run() {
 
       userData.created_at = new Date().toISOString();
       userData.last_loggedIn = new Date().toISOString();
-      userData.role = 'user';
+      userData.role = ['user'];
 
       const query = { email: userData.email };
 
@@ -96,8 +109,58 @@ async function run() {
 
     // get a user's role
     app.get('/user/role', verifyJWT, async (req, res) => {
-      const result = await usersCollection.findOne({ email: req.tokenEmail });
-      res.send({ role: result?.role || 'customer' });
+      console.log(req.user.email);
+      const result = await usersCollection.findOne({ email: req.user.email });
+      res.send({ role: result?.role || ['user'] });
+    });
+
+    // 👥 get all users with total lessons
+    app.get('/manageUsers', verifyJWT, verifyAdmin, async (req, res) => {
+      const users = await usersCollection.find().toArray();
+
+      const usersWithStats = await Promise.all(
+        users.map(async (u) => {
+          const totalLessons = await lessonsCollection.countDocuments({
+            'creator.email': u.email,
+          });
+
+          return {
+            _id: u._id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            totalLessons,
+          };
+        })
+      );
+
+      res.send(usersWithStats);
+    });
+
+    app.patch(
+      '/manageUsers/promote/:id',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $addToSet: { role: 'admin' } } // duplicate এড়াবে
+        );
+
+        res.send(result);
+      }
+    );
+
+    app.delete('/manageUsers/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+
+      const result = await usersCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+
+      res.send(result);
     });
 
     // Save a plant data in db
@@ -135,23 +198,138 @@ async function run() {
       res.send(result);
     });
 
+    // ✅ Get all lessons by logged-in user
+    app.get('/lessons/my-lessons', verifyJWT, async (req, res) => {
+      try {
+        const email = req.user.email;
+        const lessons = await lessonsCollection
+          .find({ 'creator.email': email })
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(lessons);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to fetch user lessons' });
+      }
+    });
+
+    // get current user's favorite lessons
+    app.get('/favorites', verifyJWT, async (req, res) => {
+      try {
+        const userId = req.user.uid;
+
+        // fetch all lessons where this userId is in favorites array
+        const favoriteLessons = await lessonsCollection
+          .find({ favorites: userId })
+          .toArray();
+
+        res.send(favoriteLessons);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to fetch favorites' });
+      }
+    });
+
+    // remove lesson from user's favorites
+    app.post('/favorites/remove', verifyJWT, async (req, res) => {
+      try {
+        const userId = req.user.uid;
+        const { lessonId } = req.body;
+
+        const result = await lessonsCollection.updateOne(
+          { _id: new ObjectId(lessonId) },
+          { $pull: { favorites: userId }, $inc: { favoritesCount: -1 } }
+        );
+
+        res.send({ success: !!result.modifiedCount });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to remove favorite' });
+      }
+    });
+
     // get single lessons from db by id
-    app.get('/lessons/:id', async (req, res) => {
+    app.get('/lessons/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
-      const lesson = await lessonsCollection.findOne({ _id: new ObjectId(id) });
+
+      const lesson = await lessonsCollection.findOne({
+        _id: new ObjectId(id),
+      });
 
       if (!lesson) {
         return res.status(404).send({ message: 'Lesson not found' });
       }
 
-      // If lesson is premium → user must be premium
-      if (lesson.accessLevel === 'premium' && req.user.role !== 'premium') {
+      // 🔥 get user role from DB
+      const user = await usersCollection.findOne({
+        email: req.user.email,
+      });
+
+      const roles = user?.role || ['user'];
+
+      // 🔐 premium guard
+      if (lesson.accessLevel === 'premium' && !roles.includes('premium')) {
         return res.status(403).send({
           message: 'Access denied. Upgrade to premium.',
         });
       }
 
       res.send(lesson);
+    });
+
+    // ✅ Update lesson (public/private, accessLevel, title, category, description)
+    app.patch('/lessons/:id', verifyJWT, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updates = req.body; // { title, category, description, accessLevel, isPublic }
+
+        const lesson = await lessonsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!lesson)
+          return res.status(404).send({ message: 'Lesson not found' });
+
+        // Only creator can update
+        if (lesson.creator.email !== req.user.email)
+          return res.status(403).send({ message: 'Forbidden' });
+
+        await lessonsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updates }
+        );
+
+        const updatedLesson = await lessonsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        res.send({ message: 'Lesson updated', updatedLesson });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to update lesson' });
+      }
+    });
+
+    // ✅ Delete lesson
+    app.delete('/lessons/:id', verifyJWT, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const lesson = await lessonsCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!lesson)
+          return res.status(404).send({ message: 'Lesson not found' });
+
+        // Only creator can delete
+        if (lesson.creator.email !== req.user.email)
+          return res.status(403).send({ message: 'Forbidden' });
+
+        const result = await lessonsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to delete lesson' });
+      }
     });
 
     app.get('/pricing', async (req, res) => {
@@ -354,13 +532,134 @@ async function run() {
 
         await usersCollection.updateOne(
           { email },
-          { $set: { role: 'premium' } }
+          { $addToSet: { role: 'premium' } }
         );
 
         res.send({ success: true, message: 'Premium Activated Successfully' });
       } catch (err) {
         console.log(err);
         res.status(500).send({ error: 'Payment verification failed' });
+      }
+    });
+
+    // Admin overview stats
+    app.get('/dashboard/admin-summary', verifyJWT, async (req, res) => {
+      try {
+        // check if user is admin
+        const user = await usersCollection.findOne({ email: req.user.email });
+        if (!user?.role.includes('admin')) {
+          return res.status(403).send({ message: 'Access denied' });
+        }
+
+        const totalUsers = await usersCollection.countDocuments();
+        const totalPublicLessons = await lessonsCollection.countDocuments({
+          accessLevel: 'public',
+        });
+        const reportedLessons = await lessonsCollection.countDocuments({
+          'comments.0': { $exists: true },
+        });
+        const topContributors = await lessonsCollection
+          .aggregate([
+            { $group: { _id: '$creator.email', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+          ])
+          .toArray();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todaysLessons = await lessonsCollection.countDocuments({
+          createdAt: { $gte: today.toISOString() },
+        });
+
+        res.send({
+          totalUsers,
+          totalPublicLessons,
+          reportedLessons,
+          topContributors,
+          todaysLessons,
+        });
+      } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: 'Failed to fetch admin overview' });
+      }
+    });
+
+    // 🔰 user summary
+    app.get('/dashboard/user-summary', verifyJWT, async (req, res) => {
+      try {
+        const email = req.user.email;
+        const userId = req.user.uid; // Firebase UID (must exist)
+
+        const lessonsCollection = db.collection('lessons');
+
+        // 🔹 1. Total lessons created by user
+        const totalLessons = await lessonsCollection.countDocuments({
+          'creator.email': email,
+        });
+
+        // 🔹 2. Total favorites by this user (FIXED)
+        const totalFavorites = await lessonsCollection.countDocuments({
+          favorites: userId,
+        });
+
+        // 🔹 3. Recent lessons
+        const recentLessons = await lessonsCollection
+          .find({ 'creator.email': email })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .project({
+            title: 1,
+            category: 1,
+            createdAt: 1,
+            accessLevel: 1,
+          })
+          .toArray();
+
+        // 🔹 4. Weekly activity (FIXED & RELIABLE)
+        const weeklyActivity = await lessonsCollection
+          .aggregate([
+            { $match: { 'creator.email': email } },
+            {
+              $addFields: {
+                createdDate: { $toDate: '$createdAt' }, // ✅ correct
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: '$createdDate' },
+                  week: { $isoWeek: '$createdDate' },
+                },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { '_id.year': 1, '_id.week': 1 } },
+            {
+              $project: {
+                week: {
+                  $concat: [
+                    { $toString: '$_id.year' },
+                    '-W',
+                    { $toString: '$_id.week' },
+                  ],
+                },
+                count: 1,
+                _id: 0,
+              },
+            },
+          ])
+          .toArray();
+
+        res.send({
+          totalLessons,
+          totalFavorites,
+          recentLessons,
+          weeklyActivity,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'Dashboard summary failed' });
       }
     });
 
