@@ -61,7 +61,7 @@ export const router = createBrowserRouter([
       {
         path: '/pricing',
         element: <Pricing />,
-        loader: () => fetch('http://localhost:3000/pricing'),
+        loader: () => fetch('https://lessonflow-server.vercel.app/pricing'),
       },
       {
         path: '/payment-success',
