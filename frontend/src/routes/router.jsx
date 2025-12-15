@@ -18,6 +18,7 @@ import UserOverview from '../pages/Dashboard/DashboardHome/UserOverview';
 import MyFavorites from '../pages/Dashboard/MyFavorites';
 import AdminOverview from '../pages/Dashboard/DashboardHome/AdminOverview';
 import ManageUsers from '../pages/Dashboard/ManageUsers';
+import ReportedLessons from '../pages/Dashboard/ReportedLessons';
 
 export const router = createBrowserRouter([
   {
@@ -113,6 +114,10 @@ export const router = createBrowserRouter([
       {
         path: 'manageLessons',
         element: <ManageLessons />,
+      },
+      {
+        path: 'reported-lessons',
+        element: <ReportedLessons />,
       },
     ],
   },

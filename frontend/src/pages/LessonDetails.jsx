@@ -16,8 +16,8 @@ const LessonDetails = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
-  const { role, loading: roleLoading } = useRole();
-
+  const [role, roleLoading] = useRole();
+  // console.log(role);
   const [reporting, setReporting] = useState(false);
   const [commentText, setCommentText] = useState('');
 

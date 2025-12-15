@@ -1,68 +1,145 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
+import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 
 const ManageLessons = () => {
   const axiosSecure = useAxiosSecure();
 
-  // Load all lessons
-  const { data: lessons = [], refetch } = useQuery({
-    queryKey: ['manage-lessons'],
+  const { data = {}, refetch } = useQuery({
+    queryKey: ['admin-manage-lessons'],
     queryFn: async () => {
-      const res = await axiosSecure.get('/lessons');
+      const res = await axiosSecure.get('/admin/manage-lessons');
       return res.data;
     },
   });
 
-  // Toggle featured
+  const { lessons = [], stats = {} } = data;
+
+  // ⭐ Featured
   const featureMutation = useMutation({
-    mutationFn: async ({ id, status }) =>
-      axiosSecure.patch(`/lessons/${id}/featured`, { isFeatured: status }),
+    mutationFn: ({ id, status }) =>
+      axiosSecure.patch(`/admin/lessons/${id}/featured`, {
+        isFeatured: status,
+      }),
     onSuccess: () => {
-      toast.success('Updated Successfully!');
+      toast.success('Featured updated');
       refetch();
     },
   });
 
-  const handleFeatured = (id, current) => {
-    featureMutation.mutate({ id, status: !current });
+  // ✅ Reviewed
+  const reviewMutation = useMutation({
+    mutationFn: (id) => axiosSecure.patch(`/admin/lessons/${id}/reviewed`),
+    onSuccess: () => {
+      toast.success('Marked as reviewed');
+      refetch();
+    },
+  });
+
+  // ❌ Delete
+  const deleteLesson = (id) => {
+    Swal.fire({
+      title: 'Delete lesson?',
+      text: 'This cannot be undone',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+    }).then((res) => {
+      if (res.isConfirmed) {
+        axiosSecure.delete(`/admin/lessons/${id}`).then(() => {
+          toast.success('Lesson deleted');
+          refetch();
+        });
+      }
+    });
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-3xl font-bold pb-3">Manage Lessons</h2>
+    <div className="p-5">
+      <h2 className="text-3xl font-bold mb-6">Manage Lessons</h2>
 
-      <table className="w-full border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2">Title</th>
-            <th className="p-2">Category</th>
-            <th className="p-2">Featured</th>
-          </tr>
-        </thead>
+      {/* 📊 Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="stat shadow">
+          <div className="stat-title">Public</div>
+          <div className="stat-value">{stats.public}</div>
+        </div>
+        <div className="stat shadow">
+          <div className="stat-title">Private</div>
+          <div className="stat-value">{stats.private}</div>
+        </div>
+        <div className="stat shadow">
+          <div className="stat-title">Flagged</div>
+          <div className="stat-value">{stats.flagged}</div>
+        </div>
+      </div>
 
-        <tbody>
-          {lessons.map((lesson) => (
-            <tr key={lesson._id} className="border-t">
-              <td className="p-2">{lesson.title}</td>
-              <td className="p-2">{lesson.category}</td>
-              <td className="p-2 text-center">
-                <button
-                  onClick={() =>
-                    handleFeatured(lesson._id, lesson.isFeatured || false)
-                  }
-                  className={`px-3 py-1 rounded ${
-                    lesson.isFeatured ? 'bg-primary text-white' : 'bg-gray-300'
-                  }`}
-                >
-                  {lesson.isFeatured ? 'Featured' : 'Make Featured'}
-                </button>
-              </td>
+      {/* 📋 Table */}
+      <div className="overflow-x-auto">
+        <table className="table table-zebra">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Access</th>
+              <th>Featured</th>
+              <th>Reviewed</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {lessons.map((l) => (
+              <tr key={l._id}>
+                <td>{l.title}</td>
+                <td>{l.category}</td>
+                <td>{l.accessLevel}</td>
+
+                <td>
+                  <button
+                    onClick={() =>
+                      featureMutation.mutate({
+                        id: l._id,
+                        status: !l.isFeatured,
+                      })
+                    }
+                    className={`btn btn-xs ${
+                      l.isFeatured ? 'btn-primary' : 'btn-outline'
+                    }`}
+                  >
+                    {l.isFeatured ? 'Featured' : 'Make Featured'}
+                  </button>
+                </td>
+
+                <td>
+                  {l.isReviewed ? (
+                    '✅'
+                  ) : (
+                    <button
+                      onClick={() => reviewMutation.mutate(l._id)}
+                      className="btn btn-xs btn-success"
+                    >
+                      Mark Reviewed
+                    </button>
+                  )}
+                </td>
+
+                <td className="space-x-2">
+                  <button
+                    onClick={() => deleteLesson(l._id)}
+                    className="btn btn-xs btn-error"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
+
 export default ManageLessons;

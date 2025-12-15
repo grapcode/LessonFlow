@@ -28,7 +28,7 @@ const ManageUsers = () => {
       confirmButtonText: 'Yes',
     }).then((res) => {
       if (res.isConfirmed) {
-        axiosSecure.patch(`/admin/users/promote/${id}`).then(() => {
+        axiosSecure.patch(`/manageUsers/promote/${id}`).then(() => {
           refetch();
           Swal.fire('Success', 'User promoted to admin', 'success');
         });
@@ -45,7 +45,7 @@ const ManageUsers = () => {
       confirmButtonText: 'Delete',
     }).then((res) => {
       if (res.isConfirmed) {
-        axiosSecure.delete(`/admin/users/${id}`).then(() => {
+        axiosSecure.delete(`/manageUsers/${id}`).then(() => {
           refetch();
           Swal.fire('Deleted', 'User removed', 'success');
         });

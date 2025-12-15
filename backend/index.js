@@ -163,6 +163,178 @@ async function run() {
       res.send(result);
     });
 
+    //🌀 reported lessons
+    app.get('/reported-lessons', verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await reportsCollection
+        .aggregate([
+          {
+            $group: {
+              _id: '$lessonId',
+              reportCount: { $sum: 1 },
+            },
+          },
+          {
+            $lookup: {
+              from: 'lessons',
+              let: { lessonId: '$_id' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', { $toObjectId: '$$lessonId' }],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    title: 1,
+                    category: 1,
+                    accessLevel: 1,
+                    creator: 1,
+                  },
+                },
+              ],
+              as: 'lesson',
+            },
+          },
+          { $unwind: '$lesson' },
+        ])
+        .toArray();
+
+      res.send(result);
+    });
+
+    app.get(
+      '/reported-lessons/:lessonId',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const lessonId = req.params.lessonId;
+
+        const reports = await reportsCollection.find({ lessonId }).toArray();
+        res.send(reports);
+      }
+    );
+
+    app.delete(
+      '/reported-lessons/:lessonId',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const lessonId = req.params.lessonId;
+
+        await lessonsCollection.deleteOne({ _id: new ObjectId(lessonId) });
+        await reportsCollection.deleteMany({ lessonId });
+
+        res.send({ success: true });
+      }
+    );
+
+    app.patch(
+      '/reported-lessons/:lessonId/ignore',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const lessonId = req.params.lessonId;
+
+        await reportsCollection.updateMany(
+          { lessonId },
+          { $set: { status: 'ignored' } }
+        );
+
+        res.send({ success: true });
+      }
+    );
+
+    // get all lessons (admin)
+    app.get(
+      '/admin/manage-lessons',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const { category, accessLevel, flagged } = req.query;
+
+        let query = {};
+
+        if (category) query.category = category;
+        if (accessLevel) query.accessLevel = accessLevel;
+        if (flagged === 'true') query.isReported = true;
+
+        const lessons = await lessonsCollection
+          .find(query)
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        // 📊 Stats
+        const publicCount = await lessonsCollection.countDocuments({
+          accessLevel: 'public',
+        });
+        const privateCount = await lessonsCollection.countDocuments({
+          accessLevel: 'private',
+        });
+        const flaggedCount = await lessonsCollection.countDocuments({
+          isReported: true,
+        });
+
+        res.send({
+          lessons,
+          stats: {
+            public: publicCount,
+            private: privateCount,
+            flagged: flaggedCount,
+          },
+        });
+      }
+    );
+
+    app.patch(
+      '/admin/lessons/:id/featured',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { isFeatured } = req.body;
+
+        const result = await lessonsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { isFeatured } }
+        );
+
+        res.send(result);
+      }
+    );
+
+    app.patch(
+      '/admin/lessons/:id/reviewed',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+
+        const result = await lessonsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { isReviewed: true } }
+        );
+
+        res.send(result);
+      }
+    );
+
+    app.delete(
+      '/admin/lessons/:id',
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+
+        const result = await lessonsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(result);
+      }
+    );
+
     // Save a plant data in db
     app.post('/lessons', async (req, res) => {
       const lessonsData = req.body;
