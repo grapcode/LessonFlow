@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import { PieChart, Pie, Tooltip, Legend } from 'recharts';
+import MyLoading from '../../../components/my-components/MyLoading';
 
 const AdminOverview = () => {
   const axiosSecure = useAxiosSecure();
@@ -14,7 +15,7 @@ const AdminOverview = () => {
     },
   });
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <MyLoading />;
 
   const pieData = [
     { name: 'Public Lessons', value: stats.totalPublicLessons },
