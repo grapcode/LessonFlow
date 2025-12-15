@@ -23,6 +23,11 @@
     color: #FF6D1F;
     font-weight: bold;
     border-bottom: 1px solid;
+}
 
+/* navbar active  */
+.dashboard-act .active {
+    background-color: #e3dccd;
+    font-weight: bold;
 
 }

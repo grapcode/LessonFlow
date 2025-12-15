@@ -19,6 +19,7 @@ import MyFavorites from '../pages/Dashboard/MyFavorites';
 import AdminOverview from '../pages/Dashboard/DashboardHome/AdminOverview';
 import ManageUsers from '../pages/Dashboard/ManageUsers';
 import ReportedLessons from '../pages/Dashboard/ReportedLessons';
+import AdminRoute from './AdminRoute';
 
 export const router = createBrowserRouter([
   {
@@ -105,19 +106,35 @@ export const router = createBrowserRouter([
       },
       {
         path: 'admin-summary',
-        element: <AdminOverview />,
-      },
-      {
-        path: 'manageUsers',
-        element: <ManageUsers />,
+        element: (
+          <AdminRoute>
+            <AdminOverview />
+          </AdminRoute>
+        ),
       },
       {
         path: 'manageLessons',
-        element: <ManageLessons />,
+        element: (
+          <AdminRoute>
+            <ManageLessons />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'manageUsers',
+        element: (
+          <AdminRoute>
+            <ManageUsers />
+          </AdminRoute>
+        ),
       },
       {
         path: 'reported-lessons',
-        element: <ReportedLessons />,
+        element: (
+          <AdminRoute>
+            <ReportedLessons />
+          </AdminRoute>
+        ),
       },
     ],
   },

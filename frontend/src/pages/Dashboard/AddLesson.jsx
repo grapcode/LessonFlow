@@ -104,7 +104,7 @@ const AddLesson = () => {
               <input
                 type="text"
                 placeholder="Enter lesson title"
-                className="w-full px-4 py-3 border border-indigo-300 focus:outline-indigo-500 rounded-md"
+                className="w-full px-4 py-3 border border-orange-200 focus:outline-orange-300 rounded-md"
                 {...register('title', { required: 'Title is required' })}
               />
               {errors.title && (
@@ -116,7 +116,7 @@ const AddLesson = () => {
             <div className="space-y-1 text-sm">
               <label className="block text-gray-600"> Description</label>
               <textarea
-                className="w-full h-24 px-4 py-3 border border-indigo-300 rounded-md focus:outline-indigo-500"
+                className="w-full h-24 px-4 py-3 border border-orange-200 rounded-md focus:outline-orange-300"
                 placeholder="Short description..."
                 {...register('shortDescription', { required: true })}
               ></textarea>
@@ -129,7 +129,7 @@ const AddLesson = () => {
             <div className="space-y-1 text-sm">
               <label className="block text-gray-600">Category</label>
               <select
-                className="w-full px-4 py-3 border-indigo-300 rounded-md focus:outline-indigo-500"
+                className="w-full px-4 py-3 border-orange-200 rounded-md focus:outline-orange-300"
                 {...register('category', { required: true })}
               >
                 <option value="Personal Growth">Personal Growth</option>
@@ -144,7 +144,7 @@ const AddLesson = () => {
             <div className="space-y-1 text-sm">
               <label className="block text-gray-600">Emotional Tone</label>
               <select
-                className="w-full px-4 py-3 border-indigo-300 rounded-md focus:outline-indigo-500"
+                className="w-full px-4 py-3 border-orange-200 rounded-md focus:outline-orange-300"
                 {...register('emotionalTone', { required: true })}
               >
                 <option value="Motivational">Motivational</option>
@@ -158,7 +158,7 @@ const AddLesson = () => {
             <div className="space-y-1 text-sm">
               <label className="block text-gray-600">Access Level</label>
               <select
-                className="w-full px-4 py-3 border-indigo-300 rounded-md focus:outline-indigo-500"
+                className="w-full px-4 py-3 border-orange-200 rounded-md focus:outline-orange-300"
                 {...register('accessLevel', { required: true })}
               >
                 <option value="public">Public</option>

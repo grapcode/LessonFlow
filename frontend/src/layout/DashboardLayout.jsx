@@ -48,12 +48,13 @@ const DashboardLayout = () => {
               aria-label="close sidebar"
               className="drawer-overlay"
             ></label>
+
             <div className="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
               {/* Sidebar content here */}
-              <ul className="menu w-full grow">
+              <ul className="menu dashboard-act w-full grow">
                 {/* List item */}
                 <li>
-                  <Link to="/">
+                  <Link to="/" data-tip="Home page">
                     <img
                       src={FLlogo}
                       alt=""
@@ -65,7 +66,7 @@ const DashboardLayout = () => {
                   <Link
                     to="/dashboard"
                     className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                    data-tip="overview page"
+                    data-tip="Overview"
                   >
                     {/* Home / Overview icon */}
                     <GrOverview className="my-1.5 inline-block size-4" />
@@ -110,6 +111,9 @@ const DashboardLayout = () => {
                   </NavLink>
                 </li>
 
+                {/* admin only links */}
+                {/* {role === 'admin' && ()} */}
+
                 <>
                   <li>
                     <NavLink
@@ -151,9 +155,6 @@ const DashboardLayout = () => {
                     </NavLink>
                   </li>
                 </>
-
-                {/* admin only links */}
-                {/* {role === 'admin' && ()} */}
               </ul>
             </div>
           </div>
