@@ -15,7 +15,7 @@ const PurchaseModal = ({ closeModal, isOpen, lesson }) => {
       lesson: _id,
       name,
       category,
-      price: 500,
+      price: 1500,
       description,
       quantity: 1,
       accessLevel,
@@ -68,7 +68,7 @@ const PurchaseModal = ({ closeModal, isOpen, lesson }) => {
 
             <div className="mt-2">
               <p className="text-sm text-gray-500">
-                Price: ৳<span>1500</span>
+                Price: $<span>1500</span>
               </p>
             </div>
             <div className="mt-2">

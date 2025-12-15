@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PurchaseModal from '../Modal/PurchaseModal';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
-import useAuth from '../../hooks/useAuth';
 
 const Pricing = () => {
   const [isOpen, setIsOpen] = useState(false);
   const axiosSecure = useAxiosSecure();
-  const { user } = useAuth();
 
   // -------- Fetch lessons using useQuery --------
   const { data: lessonData = [], isLoading } = useQuery({
@@ -23,18 +21,18 @@ const Pricing = () => {
   };
 
   // -------- Stripe Checkout Handler --------
-  const handleCheckout = async () => {
-    try {
-      const res = await axiosSecure.post('/create-checkout-session', {
-        price: 1500, // ৳1500 দাম
-        userEmail: user?.email,
-      });
+  // const handleCheckout = async () => {
+  //   try {
+  //     const res = await axiosSecure.post('/create-checkout-session', {
+  //       price: 1500, // $1500 দাম
+  //       userEmail: user?.email,
+  //     });
 
-      window.location.replace(res.data.url);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  //     window.location.replace(res.data.url);
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   if (isLoading) return <p className="text-center mt-20">Loading...</p>;
 
@@ -71,16 +69,16 @@ const Pricing = () => {
           </ul>
 
           <p className="text-3xl font-bold mt-6">
-            ৳<span>1500</span> (One-time)
+            $<span>1500</span> (One-time)
           </p>
 
           {/* Stripe checkout button */}
           <button
             onClick={() => {
               setIsOpen(true);
-              handleCheckout();
+              // handleCheckout();
             }}
-            className="cursor-pointer mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold text-lg"
+            className="cursor-pointer mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold text-lg"
           >
             Upgrade to Premium ⭐
           </button>
@@ -88,7 +86,6 @@ const Pricing = () => {
           {/* Modal Rendering */}
           {lessonData.map((lesson) => (
             <PurchaseModal
-              key={lesson._id}
               lesson={lesson}
               closeModal={closeModal}
               isOpen={isOpen}

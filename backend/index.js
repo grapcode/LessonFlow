@@ -720,7 +720,7 @@ async function run() {
         res.send({ url: session.url });
       } catch (error) {
         console.log(error);
-        res.status(500).send({ error: 'Stripe Session Failed' });
+        res.send({ error: 'Stripe Session Failed' });
       }
     });
 
@@ -741,7 +741,7 @@ async function run() {
         res.send({ success: true, message: 'Premium Activated Successfully' });
       } catch (err) {
         console.log(err);
-        res.status(500).send({ error: 'Payment verification failed' });
+        res.send({ error: 'Payment verification failed' });
       }
     });
 

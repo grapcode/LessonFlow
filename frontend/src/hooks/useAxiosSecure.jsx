@@ -14,7 +14,7 @@ const useAxiosSecure = () => {
 
   useEffect(() => {
     if (!loading && user?.accessToken) {
-      // Add request interceptor
+      // ✅ Request interceptor
       const requestInterceptor = axiosInstance.interceptors.request.use(
         (config) => {
           config.headers.Authorization = `Bearer ${user.accessToken}`;
@@ -22,23 +22,28 @@ const useAxiosSecure = () => {
         }
       );
 
-      // Add response interceptor
+      // ✅ Response interceptor (FIXED)
       const responseInterceptor = axiosInstance.interceptors.response.use(
         (res) => res,
-        (err) => {
-          if (err?.response?.status === 401 || err?.response?.status === 403) {
-            logOut()
-              .then(() => {
-                console.log('Logged out successfully.');
-              })
-              .catch(console.error);
-            navigate('/login');
+        async (err) => {
+          const status = err?.response?.status;
+
+          // 🔐 Token invalid → logout
+          if (status === 401) {
+            await logOut();
+            navigate('/login', { replace: true });
           }
+
+          // 🚫 Permission issue → DO NOT logout
+          if (status === 403) {
+            console.warn('Access denied (403)');
+            // optional: toast / redirect handled by UI
+          }
+
           return Promise.reject(err);
         }
       );
 
-      // Cleanup to prevent multiple interceptors on re-renders
       return () => {
         axiosInstance.interceptors.request.eject(requestInterceptor);
         axiosInstance.interceptors.response.eject(responseInterceptor);
@@ -48,4 +53,5 @@ const useAxiosSecure = () => {
 
   return axiosInstance;
 };
+
 export default useAxiosSecure;

@@ -29,13 +29,8 @@ const LessonDetails = () => {
   } = useQuery({
     queryKey: ['lesson', id],
     queryFn: async () => {
-      try {
-        const { data } = await axiosSecure.get(`/lessons/${id}`);
-        return data;
-      } catch (err) {
-        console.log(err);
-        return null;
-      }
+      const { data } = await axiosSecure.get(`/lessons/${id}`);
+      return data;
     },
   });
   // console.log(lesson);
