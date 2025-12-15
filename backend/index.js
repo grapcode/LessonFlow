@@ -364,11 +364,42 @@ async function run() {
       res.send(result);
     });
 
-    // get all lessons from db
+    //🌳 get all lessons from db
     app.get('/lessons', async (req, res) => {
       const result = await lessonsCollection.find().toArray();
       res.send(result);
     });
+
+    // // 🔹 Backend: /lessons API with pagination
+    // app.get('/lessons', async (req, res) => {
+    //   try {
+    //     let { page = 1, limit = 12 } = req.query;
+    //     page = parseInt(page);
+    //     limit = parseInt(limit);
+
+    //     const query = {}; // public lessons only, বা সব lessons চাইলে filter লাগবে
+
+    //     const totalLessons = await lessonsCollection.countDocuments(query);
+    //     const totalPages = Math.ceil(totalLessons / limit);
+
+    //     const lessons = await lessonsCollection
+    //       .find(query)
+    //       .sort({ createdAt: -1 }) // newest first
+    //       .skip((page - 1) * limit)
+    //       .limit(limit)
+    //       .toArray();
+
+    //     res.send({
+    //       lessons,
+    //       totalLessons,
+    //       totalPages,
+    //       currentPage: page,
+    //     });
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: 'Failed to fetch lessons', err });
+    //   }
+    // });
 
     // ✅ Get all lessons by logged-in user
     app.get('/lessons/my-lessons', verifyJWT, async (req, res) => {

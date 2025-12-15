@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import LessonCard from '../components/LessonCard';
 import LoadingSpinner from '../components/my-components/LoadingSpinner';
 
-const PublicLessons = () => {
+const PublicLessons_v2 = () => {
   const axiosSecure = useAxiosSecure();
 
   const { data: lessons = [], isLoading } = useQuery({
@@ -167,4 +167,4 @@ const PublicLessons = () => {
   );
 };
 
-export default PublicLessons;
+export default PublicLessons_v2;
