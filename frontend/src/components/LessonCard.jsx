@@ -15,54 +15,60 @@ const LessonCard = ({ lesson }) => {
   } = lesson || {};
 
   return (
-    <div className="card w-full bg-base-100 shadow-xl border hover:shadow-2xl transition-all duration-200">
-      {/* Lock overlay if Premium */}
+    <div className="relative group bg-base-100 border rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden">
+      {/* 🔒 Premium Badge */}
       {accessLevel === 'premium' && (
-        <div className="absolute top-3 right-3 bg-error text-white px-2 py-1 rounded-md text-sm flex items-center gap-1">
-          <FaLock /> Premium
+        <div className="absolute top-3 right-3 z-10 bg-error text-white px-3 py-1 rounded-full text-xs flex items-center gap-1 shadow">
+          <FaLock size={12} /> Premium
         </div>
       )}
 
-      <div className="card-body">
+      <div className="p-5 flex flex-col h-full">
         {/* Title */}
-        <h2 className="card-title text-xl font-bold">{title}</h2>
+        <h2 className="text-lg font-bold leading-snug line-clamp-2 group-hover:text-primary transition">
+          {title}
+        </h2>
 
-        {/* Short Description */}
-        <p className="text-sm text-gray-600">{description?.slice(0, 100)}...</p>
+        {/* Description */}
+        <p className="text-sm text-gray-600 mt-2 line-clamp-3">{description}</p>
 
-        {/* Category + Emotional Tone */}
-        <div className="flex flex-wrap gap-2 my-2">
-          <span className="badge badge-primary badge-outline">{category}</span>
-          <span className="badge badge-secondary badge-outline">
+        {/* Category + Tone */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
+            {category}
+          </span>
+          <span className="px-3 py-1 text-xs font-medium rounded-full bg-secondary/10 text-secondary">
             {emotionalTone}
           </span>
         </div>
 
-        {/* Creator Info */}
-        <div className="flex items-center gap-3 mt-2">
+        {/* Creator */}
+        <div className="flex items-center gap-3 mt-5">
           <img
             src={
               creator?.photoURL ||
               'https://img.icons8.com/?size=80&id=108652&format=png'
             }
             alt="creator"
-            className="w-10 h-10 rounded-full border"
+            className="w-10 h-10 rounded-full border object-cover"
           />
           <div>
-            <p className="font-semibold">{creator?.name}</p>
-            <p className="text-xs text-gray-500">
-              {new Date(createdAt).toLocaleDateString()}
+            <p className="text-sm font-semibold leading-none">
+              {creator?.name || 'Unknown'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {createdAt ? new Date(createdAt).toLocaleDateString() : '—'}
             </p>
           </div>
         </div>
 
-        {/* Footer / Button */}
-        <div className="card-actions justify-end mt-3">
+        {/* Action */}
+        <div className="mt-auto pt-5">
           <Link
             to={`/lessons/${_id}`}
-            className="btn btn-sm btn-primary rounded-md"
+            className="btn btn-sm btn-primary w-full rounded-lg"
           >
-            See Details
+            See Details →
           </Link>
         </div>
       </div>

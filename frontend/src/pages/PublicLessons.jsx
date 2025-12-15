@@ -71,7 +71,7 @@ const PublicLessons = () => {
   const tones = [...new Set(lessons.map((l) => l.emotionalTone))];
 
   return (
-    <div>
+    <div className="my-5">
       <h2 className="text-3xl font-bold py-3">
         Public Lessons: {filteredLessons.length}
       </h2>

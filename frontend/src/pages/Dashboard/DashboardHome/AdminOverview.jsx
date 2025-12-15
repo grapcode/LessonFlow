@@ -26,22 +26,30 @@ const AdminOverview = () => {
     <div className="p-4">
       <h2 className="text-3xl font-bold mb-4">Admin Dashboard Home</h2>
 
-      <div className="stats shadow mb-6">
-        <div className="stat">
-          <div className="stat-title">Total Users</div>
-          <div className="stat-value">{stats.totalUsers}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 shadow mb-6 p-4 rounded-lg bg-white">
+        <div className="stat p-4 bg-gray-50 rounded-lg text-center">
+          <div className="stat-title text-gray-500">Total Users</div>
+          <div className="stat-value text-2xl font-bold">
+            {stats.totalUsers}
+          </div>
         </div>
-        <div className="stat">
-          <div className="stat-title">Total Public Lessons</div>
-          <div className="stat-value">{stats.totalPublicLessons}</div>
+        <div className="stat p-4 bg-gray-50 rounded-lg text-center">
+          <div className="stat-title text-gray-500">Total Public Lessons</div>
+          <div className="stat-value text-2xl font-bold">
+            {stats.totalPublicLessons}
+          </div>
         </div>
-        <div className="stat">
-          <div className="stat-title">Reported Lessons</div>
-          <div className="stat-value">{stats.reportedLessons}</div>
+        <div className="stat p-4 bg-gray-50 rounded-lg text-center">
+          <div className="stat-title text-gray-500">Reported Lessons</div>
+          <div className="stat-value text-2xl font-bold">
+            {stats.reportedLessons}
+          </div>
         </div>
-        <div className="stat">
-          <div className="stat-title">Today's Lessons</div>
-          <div className="stat-value">{stats.todaysLessons}</div>
+        <div className="stat p-4 bg-gray-50 rounded-lg text-center">
+          <div className="stat-title text-gray-500">Today's Lessons</div>
+          <div className="stat-value text-2xl font-bold">
+            {stats.todaysLessons}
+          </div>
         </div>
       </div>
 
